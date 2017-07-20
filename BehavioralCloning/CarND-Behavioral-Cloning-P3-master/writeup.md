@@ -20,7 +20,13 @@ The goals / steps of this project are the following:
 
 ## Rubric Points
 How I adressed each point of my implementation:
-* 
+* Research, find out what is the best approaches been used for this kind a problem
+* Create the dataset, using the simulator to record multiples runs, in two different tracks, makign some mistakes and recovery to no be bias at the training.
+* Implemente augmentation to generalize the model
+* Create the model based on the researched models
+* Training the model with different hyperparameters
+* Analize the training based on the loss and mean square error
+* Test the model with the simulator
 
 
 ---
@@ -48,76 +54,68 @@ The model.py file contains the code for training and saving the convolution neur
 
 ####1. An appropriate model architecture has been employed
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
+The model is based on the [NVIDIA model](https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/). 
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
+The architecture seems to be best one for this project
+
+The following additions were made.
+- A lambda layer (normalization) is added.
+- A crop layer is added.
+- The model was normalised, which help to avoid saturation and gradients work better.
+- A specific learning rate is used for the adam optimizer.
+- In order to avoid overfitting a dropout layer has been added.
+
+|layer				 | shape  				 |
+|:------------------:|:---------------------:|
+|Input 160, 320, 3  |
+|Lambda          | (lambda x: x / 127.5 - 1.)|
+|Cropping        | (50,20)
+|Convolution 		 | Filter 24, Kernel (5 x 5), Stride (2 x 2) , "relu"|
+|Convolution 		 | Filter 36, Kernel (5 x 5), Stride (2 x 2) , "relu"|
+|Convolution 		 | Filter 48, Kernel (5 x 5), Stride (2 x 2) , "relu"|
+|Convolution 		 | Filter 64, Kernel (3 x 3), Stride (2 x 2) , "relu"|
+|Convolution 		 | Filter 64, Kernel (3 x 3), Stride (2 x 2) , "relu"|
+|Dropout 		 	 | 0.5					 |	
+|Flatten 		 	 | 
+|Dense  		 	 | 100, "relu"			 | 
+|Dense  		 	 | 50, "relu"			 |
+|Dense  		 	 | 10, "relu"			 |
+|Dense  		 	 | 1 			 		 |
+
+
+The model uses RELU activations functions. 
+The impletation was built using  Keras
 
 ####2. Attempts to reduce overfitting in the model
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
-
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+The model contains dropout layers in order to reduce overfitting
 
 ####3. Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
+The model used an adam optimizer, with LEARNING_RATE = 1e-4
 
 ####4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road ... 
+Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road.
 
-For details about how I created the training data, see the next section. 
+The data was generated using the Udacity simulator, in both tracks, using the keyboard. I record at least 5 times of full laps in both tracks.
 
 ###Model Architecture and Training Strategy
 
 ####1. Solution Design Approach
 
-The overall strategy for deriving a model architecture was to ...
+My first step was to use a convolution neural network model similar to the examples in teh past videos, but with the augmented data, which fail baddly.
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
+Then I tried to implement the comma.ai model, which took me to the Nvidia model
 
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
+My first try with the Nvidia model was without dropouts, which generated a higher loss on the validation set when compared to the training set. I added a droput layer to fix the overfitting issue.
 
-To combat the overfitting, I modified the model so that ...
+Then I found some issues in recovery from fails, so I added a correction factor of 0.2 to the angles, like I found in many examples around the web, this increased the perspective of the camera.
 
-Then I ... 
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
+The final step was to run the simulator to see how well the car was driving around track one. 
 
 At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
 
-####2. Final Model Architecture
-
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
-
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
-
-![alt text][image1]
-
-####3. Creation of the Training Set & Training Process
-
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
-
-![alt text][image2]
-
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
-
-![alt text][image3]
-![alt text][image4]
-![alt text][image5]
-
-Then I repeated this process on track two in order to get more data points.
-
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
-
-![alt text][image6]
-![alt text][image7]
-
-Etc ....
-
-After the collection process, I had X number of data points. I then preprocessed this data by ...
-
-
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
-
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+###Problems to be solved
+1)Speed control, need to be able to learn better speed control
+2)At the second track at downhill the breakes go crazy, it need a better training data for breaking scerarios too.
